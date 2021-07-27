@@ -1,6 +1,7 @@
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
+from hashlib import md5
 
 from twittor import db, login_manager
 
@@ -10,6 +11,8 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), unique=True, index=True)
     email = db.Column(db.String(64), unique=True, index=True)
     password_hash = db.Column(db.String(128))
+    about_me = db.Column(db.String(120))
+    create_time = db.Column(db.DateTime, default=datetime.utcnow)
     tweets = db.relationship('Tweet', backref='author', lazy='dynamic')
 
     def __repr__(self):
@@ -22,6 +25,10 @@ class User(UserMixin, db.Model):
     
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
+    
+    def avatar(self,size=80):
+        md5_digest=md5(self.email.lower().encode('utf-8')).hexdigest()
+        return "https://gravatar.loli.net/avatar/{}/?d=identicon&s={}".format(md5_digest,size)
 
 
 @login_manager.user_loader
