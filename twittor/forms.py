@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField,TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError,Length
 
-from twittor.models import User
+from twittor.models import Tweet, User
 
 
 class LoginForm(FlaskForm):
@@ -35,3 +35,8 @@ class RegisterForm(FlaskForm):
 class EditProfileForm(FlaskForm):
     about_me = TextAreaField('About me', validators=[Length(min=0, max=120)])
     submit = SubmitField('Save')
+
+
+class TweetForm(FlaskForm):
+    tweet = TextAreaField('Tweet',validators=[DataRequired(),Length(min=0, max=280)])
+    submit = SubmitField('OK')

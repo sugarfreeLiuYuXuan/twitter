@@ -1,27 +1,29 @@
-from re import U
-from flask import render_template, redirect, url_for, request,abort
+
+from flask import render_template, redirect, url_for, request,abort,current_app
 from flask_login import login_user, current_user, logout_user, login_required
-from twittor.forms import LoginForm, RegisterForm,EditProfileForm
+from twittor.forms import LoginForm, RegisterForm,EditProfileForm,TweetForm
 from twittor.models import User, Tweet, load_user
 from twittor import db
 
 @login_required
 def index():
-    posts = [
-        {
-            'author': {'username': 'root'},
-            'body': "hi I'm root!"
-        },
-        {
-            'author': {'username': 'test'},
-            'body': "hi I'm test!"
-        },
-        {
-            'author': {'username': 'test1'},
-            'body': "hi I'm test1!"            
-        }      
-    ]
-    return render_template('index.html', posts=posts)
+    form = TweetForm()
+    if form.validate_on_submit():
+        t = Tweet(body=form.tweet.data,author=current_user)
+        db.session.add(t)
+        db.session.commit()
+        return redirect(url_for('index'))
+    page_number= int (request.args.get('page') or 1)
+    tweets = current_user.own_and_followed_tweets().paginate(
+        page=page_number,per_page=current_app.config['TWEET_PER_PAGE'],error_out=False)
+    next_url = url_for('index',page=tweets.next_num)
+    prev_url = url_for('index',page=tweets.prev_num)
+    flag_next = tweets.has_next
+    flag_prev = tweets.has_prev
+    return render_template(
+        'index.html',tweets=tweets.items,form=form,next_url=next_url,prev_url=prev_url,
+        flag_next=flag_next,flag_prev=flag_prev
+        )
 
 
 def login():
@@ -62,17 +64,15 @@ def user(username):
     ur=User.query.filter_by(username= username).first()
     if ur is None:
         abort(404)
-    posts = [
-        {
-            'author': {'username': ur.username},
-            'body': "hi I'm {}!".format(ur.username)
-        },
-        {
-            'author': {'username': ur.username},
-            'body': "hi I'm {}!".format(ur.username)
-        }
-    ]
-    
+    page_number= int (request.args.get('page') or 1)
+    tweets=Tweet.query.filter_by(author=ur).order_by(Tweet.create_time.desc()).paginate(
+        page=page_number,per_page=current_app.config['TWEET_PER_PAGE'],error_out=False) 
+
+    next_url = url_for('profile',page=tweets.next_num,username=username)
+    prev_url = url_for('profile',page=tweets.prev_num,username=username)
+    flag_next = tweets.has_next
+    flag_prev = tweets.has_prev
+
     if request.method=='POST':
         if request.form['request_button'] == 'Follow':
             current_user.follow(ur)
@@ -80,7 +80,8 @@ def user(username):
         else:
             current_user.unfollow(ur)
             db.session.commit()
-    return render_template('user.html',title='Profile',posts=posts,user=ur)
+    return render_template('user.html',title='Profile',tweets=tweets.items,user=ur,
+        next_url=next_url,prev_url=prev_url,flag_next=flag_next,flag_prev=flag_prev)
 
 def page_not_found(err):
     return render_template('404.html'),404

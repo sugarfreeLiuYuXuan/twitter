@@ -58,6 +58,12 @@ class User(UserMixin, db.Model):
         return self.followed.filter(
             followers.c.followed_id == user.id).count() > 0
 
+    def own_and_followed_tweets(self):   
+        followed = Tweet.query.join(   #将followers表和Tweet表连接(条件followed_id==user_id)
+            followers, (followers.c.followed_id == Tweet.user_id)).filter(
+                followers.c.follower_id == self.id)     #筛选出自己关注的人self.id
+        own = Tweet.query.filter_by(user_id=self.id)
+        return followed.union(own).order_by(Tweet.create_time.desc())   #等同于mysql order by
 
 @login_manager.user_loader
 def load_user(id):
@@ -66,7 +72,8 @@ def load_user(id):
 
 class Tweet(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(140))
+    body = db.Column(db.String(280))
+    time_default=datetime.utcnow
     create_time = db.Column(db.DateTime, default=datetime.utcnow)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
