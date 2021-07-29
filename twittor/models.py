@@ -1,9 +1,11 @@
+import jwt
 from datetime import datetime
+from flask.globals import current_app
 from sqlalchemy.orm import backref
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from hashlib import md5
-
+import time
 from twittor import db, login_manager
 
 
@@ -19,17 +21,25 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     about_me = db.Column(db.String(120))
     create_time = db.Column(db.DateTime, default=datetime.utcnow)
-
     tweets = db.relationship('Tweet', backref='author', lazy='dynamic')   #一对多
-
-  
-
     followed = db.relationship(
         'User', secondary=followers,
         primaryjoin=(followers.c.follower_id == id),    #找关注了多少人
         secondaryjoin=(followers.c.followed_id == id),  #找有多少人关注我
         backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')    #多对多
 
+    def get_jwt(self,expire=600):
+        token = jwt.encode({'email':self.email,'exp':time.time()+expire},current_app.config['SECRET_KEY'],algorithm='HS256')
+        return token
+
+    @staticmethod
+    def verify_jwt(token):
+        try:
+            email = jwt.decode(token,current_app.config['SECRET_KEY'],algorithms=['HS256'])
+            email = email['email']
+        except:
+            return
+        return User.query.filter_by(email=email).first()
 
     def __repr__(self):
         return 'id={}, username={}, email={}, password_hash={}'.format(
