@@ -1,9 +1,14 @@
-
+from email.mime import text
+from twittor.email import send_email
 from flask import render_template, redirect, url_for, request,abort,current_app
+from flask.helpers import flash
 from flask_login import login_user, current_user, logout_user, login_required
-from twittor.forms import LoginForm, RegisterForm,EditProfileForm,TweetForm
+from flask_wtf import form
+from twittor.forms import LoginForm, PasswdResetRequestForm, RegisterForm,EditProfileForm,\
+    TweetForm,PasswdResetForm
 from twittor.models import User, Tweet, load_user
 from twittor import db
+
 
 @login_required
 def index():
@@ -96,3 +101,43 @@ def edit_profile():
         db.session.commit()
         return redirect(url_for('profile', username=current_user.username))
     return render_template('edit_profile.html', form=form)
+
+
+def password_reset_request():
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    form = PasswdResetRequestForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email = form.email.data).first()
+        
+        if user:
+            flash(
+                "你将收到一份来自服务器的验证邮件请至邮箱或垃圾箱中查看你的邮件"
+            )
+            token = user.get_jwt()
+            url = 'http://127.0.0.1:5000/password_reset/{}'.format(token)
+            send_email(
+                subject='密码重新设置通知',
+                recipients=[user.email],
+                text_body='test body',
+                html_body='<h1>{}</h1>'.format(url)
+            )
+        return redirect(url_for('login'))
+    return render_template('password_reset_request.html',form=form)
+
+
+
+def password_reset(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
+    user = User.verify_jwt(token)
+    if not user:
+        return redirect(url_for('login'))
+    form = PasswdResetForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        db.session.commit()
+        return redirect(url_for('login'))
+    return render_template(
+        'password_reset.html', title='Password Reset', form=form
+    )
