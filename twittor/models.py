@@ -28,7 +28,7 @@ class User(UserMixin, db.Model):
         secondaryjoin=(followers.c.followed_id == id),  #找有多少人关注我
         backref=db.backref('followers', lazy='dynamic'), lazy='dynamic')    #多对多
 
-    def get_jwt(self,expire=600):
+    def get_jwt(self,expire=7200):
         token = jwt.encode({'email':self.email,'exp':time.time()+expire},current_app.config['SECRET_KEY'],algorithm='HS256')
         return token
 

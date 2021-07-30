@@ -115,12 +115,24 @@ def password_reset_request():
                 "你将收到一份来自服务器的验证邮件请至邮箱或垃圾箱中查看你的邮件"
             )
             token = user.get_jwt()
-            url = 'http://127.0.0.1:5000/password_reset/{}'.format(token)
+            url_password_reset = url_for(
+                'password_reset',token=token,
+                _external = True    #代表完整的http链接
+            )
+            url_password_reset_request = url_for(
+                'password_reset_request',
+                _external =True    
+            )
+
             send_email(
-                subject='密码重新设置通知',
+                subject=current_app.config['MAIL_SUBJECT_RESET_PASSWORD'],
                 recipients=[user.email],
-                text_body='test body',
-                html_body='<h1>{}</h1>'.format(url)
+                text_body='ok',
+                html_body=render_template(
+                    'email/email_for_reset_password.html',
+                    url_password_reset = url_password_reset,
+                    url_password_reset_request=url_password_reset_request
+                )
             )
         return redirect(url_for('login'))
     return render_template('password_reset_request.html',form=form)

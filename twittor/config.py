@@ -18,5 +18,5 @@ class Config:
     MAIL_DEFAULT_SENDER='562048502@qq.com'
     MAIL_USERNAME='562048502@qq.com'
     MAIL_PASSWORD='horupuixraecbdec'
-
+    MAIL_SUBJECT_RESET_PASSWORD = '[无糖可乐] 请 重 置 您 的 密 码 '
     
