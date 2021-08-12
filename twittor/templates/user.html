@@ -1,53 +1,56 @@
 {% extends "base.html" %}
 
 {% block content %}
-<table>
+
+<table class="table-light">
     <tr>
-        <td><img src="{{user.avatar(200)}}" alt=""></td>
+        <td><img src="{{ user.avatar(200) }}" alt=""></td>
         <td>
             <p>
-            <b>{{ user.username}}</b>
-            <p>
-                Followers {{ user.followers.count()}}  Following {{ user.followed.count()}}
-            </p>
-            <form action="" method="POST">
+                <form action="" method="post">
+                    <b>{{ user.username }}</b>
+                    {% if user == current_user %}
+                    {% if current_user.is_activated != 1 %}
+                    <input id="btn" class="btn btn-warning" type="submit" name="request_button" value="激活邮箱">
+                    {% else %}
+                    <span class="badge badge-success">已激活</span>
+                    {% endif %}
+                    {% endif %}
+                </form>
+                <p>
+                    粉丝 <b>{{ user.followers.count() }}</b>  正在关注 <b>{{ user.followed.count() }}</b>
+                </p>
+                <form action="" method="post">
                     {% if user != current_user %}
                     {% if current_user.is_following(user) %}
-                    <input type="submit" value="UnFollow" name="request_button">
+                    <input class="btn btn-outline-primary" type="submit" name="request_button" value="取消关注">
                     {% else %}
-                    <input type="submit" value="Follow" name="request_button">
+                    <input class="btn btn-outline-primary" type="submit" name="request_button" value="关注">
                     {% endif %}
                     {% endif %}
-            </form>
+                </form>
             </p>
-            {% if  user.about_me %}
-                <p>{{user.about_me}}</p>
-                <br>
+            {% if user.about_me %}
+            <p>关于我: {{ user.about_me }}</p>
             {% endif %}
 
             {% if user.create_time %}
-                <p><b>注册时间:</b>{{user.create_time}}</p>
-                <br>
+            <p>加入时间: {{ user.create_time }}</p>
             {% endif %}
-
             {% if user==current_user %}
-                <p><a href="{{ url_for('edit_profile') }}">Edit Your Profile</a></p>
+            <p><a href="{{ url_for('edit_profile') }}">编辑资料</a></p>
             {% endif %}
-           
         </td>
     </tr>
 </table>
+
 {% include '_tweets.html' %}
 
-{% if flag_prev %}
-    <a href="{{ prev_url }}">上一页</a>
-    {% endif %}
+{% if prev_url %}
+<a href="{{ prev_url }}">上一页</a>
+{% endif %}
+{% if next_url %}
+<a href="{{ next_url }}">下一页</a>
+{% endif %}
 
-    {% if flag_next %}
-    <a href="{{ next_url }}">下一页</a>
-    {% endif %}
-    
 {% endblock %}
-
-
-

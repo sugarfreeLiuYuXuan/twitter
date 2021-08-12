@@ -2,8 +2,13 @@
 
 {% block content %}
 
-    <h1>Login</h1>
-    <form action="" method="post">
+<div class='row'>
+    <div class="text-center col-lg-4"></div>
+<div class="text-center col-lg-4">
+    <img src="/demo.py">
+    <br>
+    <h1 class="h3 mb-3 font-weight-normal">请先登陆</h1>
+    <form action="" method="post" class="form-signin">
         <p>
             {{ form.username.label }}
             {{ form.username() }}
@@ -14,13 +19,17 @@
         </p>
         <p>
             {{ form.remember_me() }}
-            {{ form.remember_me.label }}
+            {{ form.remember_me().label }}
         </p>
+        <button class="btn btn-lg btn-outline-primary" type="submit">登陆</button>
+        
         <p>
-            {{ form.submit() }}
+            <br>
+            <a href="{{ url_for('register') }}">注册一个新用户?</a>or 
+            <a href="{{ url_for('password_reset_request') }}">忘记密码了？</a>
         </p>
-        <a href="{{ url_for('register') }}">New User?</a>
-        <a href="{{ url_for('password_reset_request') }}">Forgot Your PassWord?</a>
+        <p class="mt-5 mb-3 text-muted">&copy; 无糖可乐</p>
     </form>
-
-    {% endblock %}
+</div>
+</div>
+{% endblock %}

@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class='row'>
+    <div class="text-center col-lg-4"></div>
+<div class="text-center col-lg-4">
 <h1>Hello, <a href="/{{ current_user.username }}">{{ current_user.username }}</a></h1>
 
 
@@ -8,9 +11,9 @@
     {{ form.hidden_tag() }}
     <p>
         {{ form.tweet.label }}<br>
-        {{ form.tweet(cols=100, rows=4) }}<br>
+        {{ form.tweet(cols=50, rows=4) }}<br>
         {% for error in form.tweet.errors %}
-        <span style="color: red;">[{{ error }}]</span>
+        <span style="color:red;">[{{ error }}]</span>
         {% endfor %}
     </p>
     <p>{{ form.submit() }}</p>
@@ -24,4 +27,6 @@
     {% if flag_next %}
     <a href="{{ next_url }}">下一页</a>
     {% endif %}
+</div>
+</div>  
 {% endblock %}

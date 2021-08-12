@@ -7,7 +7,7 @@ from flask_login import UserMixin
 from hashlib import md5
 import time
 from twittor import db, login_manager
-
+from twittor.models.tweets import Tweet
 
 followers = db.Table('followers',
     db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
@@ -21,6 +21,7 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     about_me = db.Column(db.String(120))
     create_time = db.Column(db.DateTime, default=datetime.utcnow)
+    is_activated = db.Column(db.Boolean, default=False)
     tweets = db.relationship('Tweet', backref='author', lazy='dynamic')   #一对多
     followed = db.relationship(
         'User', secondary=followers,
@@ -80,14 +81,4 @@ def load_user(id):
     return User.query.get(int(id))
 
 
-class Tweet(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    body = db.Column(db.String(280))
-    time_default=datetime.utcnow
-    create_time = db.Column(db.DateTime, default=datetime.utcnow)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
-    def __repr__(self):
-        return "id={}, body={}, create_time={}, user_id={}".format(
-            self.id, self.body, self.create_time, self.user_id
-        )

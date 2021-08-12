@@ -6,7 +6,8 @@ from flask_login import login_user, current_user, logout_user, login_required
 from flask_wtf import form
 from twittor.forms import LoginForm, PasswdResetRequestForm, RegisterForm,EditProfileForm,\
     TweetForm,PasswdResetForm
-from twittor.models import User, Tweet, load_user
+from twittor.models.user import User, load_user
+from twittor.models.tweets import Tweet
 from twittor import db
 
 
@@ -82,11 +83,55 @@ def user(username):
         if request.form['request_button'] == 'Follow':
             current_user.follow(ur)
             db.session.commit()
-        else:
+        elif request.form['request_button'] == 'UnFollow':
             current_user.unfollow(ur)
             db.session.commit()
+        else:
+            flash("系统将会发送激活邮件至您的邮箱，请查收")
+            send_email_for_user_activate(current_user)
     return render_template('user.html',title='Profile',tweets=tweets.items,user=ur,
         next_url=next_url,prev_url=prev_url,flag_next=flag_next,flag_prev=flag_prev)
+
+def send_email_for_user_activate(user):
+    token = user.get_jwt()
+    url_user_activate = url_for(
+        'user_activate',
+        token=token,
+        _external=True
+    )
+    send_email(
+        subject=current_app.config['MAIN_SUBJECT_USER_ACTIVATE'],
+        recipients=[user.email],
+        text_body= render_template(
+            'email/user_activate.txt',
+            username=user.username,
+            url_user_activate=url_user_activate
+        ),
+        html_body=render_template(
+            'email/user_activate.html',
+            username=user.username,
+            url_user_activate=url_user_activate
+        )
+    )
+
+
+def user_activate(token):
+    if current_user.is_authenticated:
+        print("3333")
+        return redirect(url_for('index'))
+    user = User.verify_jwt(token)
+    if not user:
+        print("11")
+        msg = "Token可能已经过期，请重新点击按钮发送邮箱"
+    else:
+        print("22")
+        user.is_activated = True
+        db.session.commit()
+        msg = '用户邮箱已经被激活'
+    return render_template(
+        'user_activate.html', msg=msg
+    )
+
 
 def page_not_found(err):
     return render_template('404.html'),404
@@ -153,3 +198,17 @@ def password_reset(token):
     return render_template(
         'password_reset.html', title='Password Reset', form=form
     )
+
+@login_required
+def explore():
+    # get all user and sort by followers
+    page_num = int(request.args.get('page') or 1)
+    tweets = Tweet.query.order_by(Tweet.create_time.desc()).paginate(
+        page=page_num, per_page=10, error_out=False)
+
+    next_url = url_for('explore', page=tweets.next_num) if tweets.has_next else None
+    prev_url = url_for('explore', page=tweets.prev_num) if tweets.has_prev else None
+    return render_template(
+        'explore.html', tweets=tweets.items, next_url=next_url, prev_url=prev_url
+    )
+

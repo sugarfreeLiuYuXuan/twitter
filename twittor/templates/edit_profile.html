@@ -1,11 +1,14 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1>Edit Profile</h1>
+<div class='row'>
+    <div class="text-center col-lg-4"></div>
+<div class="text-center col-lg-4">
+    <h1>编辑资料</h1>
     <form action="" method="post">
         {{ form.hidden_tag() }}
         <p>
-            {{ form.about_me.label }}<br>
+            关于我 <br>
             {{ form.about_me(cols=50, rows=4) }}<br>
             {% for error in form.about_me.errors %}
             <span style="color: red;">[{{ error }}]</span>
@@ -13,4 +16,6 @@
         </p>
         <p>{{ form.submit() }}</p>
     </form>
+</div>
+</div>
 {% endblock %}
